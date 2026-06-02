@@ -3,7 +3,6 @@
   <header>
     <div class="wrapper">
       <nav>
-        <Menu></Menu>
       </nav>
     </div>
   </header>
@@ -13,6 +12,5 @@
 </template>
 <script setup>
   import { RouterView } from 'vue-router';
-  import Menu from './components/menu/Menu.vue';
 </script>
 

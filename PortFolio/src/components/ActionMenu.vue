@@ -1,65 +1,75 @@
 <template>
-  <div class="action-menu">
+  <div class="grid grid-cols-2 gap-2 p-2 bg-gray-100 rounded-lg overflow-y-auto">
     <template v-if="actionMenuStore.currentMenu === 'main'">
-      <button class="item cursor-pointer" @click="actionMenuStore.openMenu('attack')">Atacar</button>
-      <button class="item" @click="executeAction('defend')">Defender</button>
-      <button class="item" @click="actionMenuStore.openMenu('items')">Items</button>
-      <button class="item" @click="executeAction('flee')">Huir</button>
+      <button class="action-btn" @click="actionMenuStore.openMenu('attack')">Atacar</button>
+      <button class="action-btn" @click="actionMenuStore.openMenu('switch')">Cambiar</button>
+      <button class="action-btn" @click="actionMenuStore.openMenu('items')">Items</button>
+      <button class="action-btn" @click="executeAction('flee')">Huir</button>
     </template>
 
     <template v-else-if="actionMenuStore.currentMenu === 'attack'">
-      <button class="item" @click="executeAction('skill-1')">Hab.1</button>
-      <button class="item" @click="executeAction('skill-2')">Hab.2</button>
-      <button class="item" @click="executeAction('skill-3')">Hab.3</button>
-      <button class="item" @click="executeAction('skill-4')">Hab.4</button>
-      <button class="item" @click="actionMenuStore.backToMain()">Volver</button>
+      <button
+        v-for="attack in activePlayerAttacks"
+        :key="attack.name"
+        class="action-btn flex flex-col items-start m-4 p-4 bg-gray-50" 
+        @click="executeAction('skill', attack)"
+      >
+        <span class="font-bold capitalize">{{ attack.name }}</span>
+        <span class="text-xs text-gray-500">Poder: {{ attack.power ?? '—' }}</span>
+      </button>
+      <span v-if="activePlayerAttacks.length === 0" class="col-span-2 text-center text-gray-400 py-2">
+        Sin ataques
+      </span>
+      <button class="action-btn col-span-2" @click="actionMenuStore.backToMain()">← Volver</button>
+    </template>
+
+    <template v-else-if="actionMenuStore.currentMenu === 'switch'">
+      <button
+        v-for="(player, index) in switchablePlayers"
+        :key="player.id"
+        class="action-btn flex flex-col items-start"
+        @click="executeSwitch(index)"
+      >
+        <span class="font-bold">{{ player.name }}</span>
+        <span class="text-xs text-gray-500">HP: {{ player.hp }}/{{ player.maxHp }}</span>
+      </button>
+      <span v-if="switchablePlayers.length === 0" class="col-span-2 text-center text-gray-400 py-2">
+        Sin pokémon disponibles
+      </span>
+      <button class="action-btn col-span-2" @click="actionMenuStore.backToMain()">← Volver</button>
     </template>
 
     <template v-else-if="actionMenuStore.currentMenu === 'items'">
-      <button class="item" @click="executeAction('items')">Usar item</button>
-      <button class="item" @click="actionMenuStore.backToMain()">Volver</button>
+      <button class="action-btn" @click="executeAction('items')">Usar item</button>
+      <button class="action-btn col-span-2" @click="actionMenuStore.backToMain()">← Volver</button>
     </template>
   </div>
 </template>
+
 <script setup>
+import { computed } from 'vue'
 import { useCombatStore } from '@/stores/useCombatStore'
 import { useActionMenuStore } from '@/stores/useActionMenuStore'
+import { storeToRefs } from 'pinia'
 
 const combatStore = useCombatStore()
 const actionMenuStore = useActionMenuStore()
 
-const executeAction = (actionType) => {
-  combatStore.executePlayerAction(actionType)
+const { activePlayer, activePlayerIndex, playerTeam } = storeToRefs(combatStore)
+
+const activePlayerAttacks = computed(() => activePlayer.value?.attacks ?? [])
+
+const switchablePlayers = computed(() =>
+  playerTeam.value.filter((p, i) => i !== activePlayerIndex.value && p.hp > 0)
+)
+
+const executeAction = (actionType, attack = null) => {
+  combatStore.executePlayerAction(actionType, attack)
+  actionMenuStore.backToMain()
+}
+
+const executeSwitch = (index) => {
+  combatStore.switchActivePokemon(index)
   actionMenuStore.backToMain()
 }
 </script>
-
-<style scoped>
-.action-menu {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: grid;
-  grid-template-columns: repeat(2, 2fr);
-  gap: 8px;
-  padding: 8px;
-  box-sizing: border-box;
-  background: #f3f4f6;
-  border-top: 1px solid #e5e7eb;
-}
-.action-menu .item {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-weight: 600;
-}
-.action-menu .item:hover {
-  background: lightblue;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 8px 12px;
-  font-weight: 600;
-}
-</style>

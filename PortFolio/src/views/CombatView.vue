@@ -1,13 +1,16 @@
 <template>
-  <main class="relative min-h-screen">
-    <div class="h-full">
-      <h1 class="">Piso 1</h1>
+  <main class="flex flex-col h-screen bg-indigo-950">
+    <div class="flex-1 overflow-hidden">
       <Combat />
     </div>
-    <ActionMenu />
+    <section class="grid grid-cols-2 gap-4 p-4 bg-slate-800">
+      <ActionMenu />
+      <CombatLog />
+    </section>
   </main>
 </template>
 <script setup>
   import Combat from '@/components/CombatArena.vue'
   import ActionMenu from '@/components/ActionMenu.vue'
+  import CombatLog from '@/components/CombatLog.vue'
 </script>

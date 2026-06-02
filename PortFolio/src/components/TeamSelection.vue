@@ -1,5 +1,10 @@
 <template>
-  <div class="flex justify-center p-4 items-center flex-wrap">
+  <div v-if="loading" class="flex flex-col items-center justify-center min-h-[60vh] w-full">
+    <ProgressSpinner style="width: 4rem; height: 4rem" />
+    <p class="mt-4 text-lg font-semibold text-slate-700">Cargando opciones...</p>
+  </div>
+
+  <div v-else class="flex justify-center p-4 items-center flex-wrap">
     <span class="w-full text-center text-2xl font-bold mb-4">Elige a tu equipo</span>
     <div
       v-for="creature in creatures"
@@ -17,6 +22,12 @@
       <div class="text-sm">HP: {{ getStat(creature, 'hp') }}</div>
       <div class="text-sm">Atk: {{ getStat(creature, 'attack') }}</div>
       <div class="text-sm">Def: {{ getStat(creature, 'defense') }}</div>
+      <h3>Attacks</h3>
+      <ul class="mt-2 text-xs text-left">
+        <li v-for="attack in creature.attacks" :key="attack.name">
+          {{ attack.name }} - {{ attack.power }}
+        </li>
+      </ul>
     </div>
     
   </div>
@@ -35,6 +46,11 @@
         <img v-if="pokemon.sprite" :src="pokemon.sprite" :alt="pokemon.name" class="w-20 h-20 object-contain mx-auto mb-2">
         <div class="font-semibold">{{ pokemon.name }}</div>
         <div class="text-sm">HP: {{ pokemon.hp }}/{{ pokemon.maxHp }}</div>
+        <ul class="mt-2 text-xs text-left">
+          <li v-for="attack in pokemon.attacks" :key="attack.name">
+            {{ attack.name }} - {{ attack.power }}
+          </li>
+        </ul>
       </div>
     </div>
     <div class="mt-4" v-if="team.length === 3">
@@ -54,14 +70,18 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCombatStore } from '@/stores/useCombatStore'
 import randomSelection from '@/composables/randomSelection'
+import ProgressSpinner from 'primevue/progressspinner'
 
 const creatures = ref([])
 const team = ref([])
+const loading = ref(true)
 const router = useRouter()
 const combatStore = useCombatStore()
 
 async function loadCreatures() {
+  loading.value = true
   creatures.value = await randomSelection()
+  loading.value = false
 }
 
 function getStat(pokemon, statName) {
