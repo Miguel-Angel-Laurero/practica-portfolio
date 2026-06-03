@@ -1,5 +1,5 @@
 <template>
-  <main class="flex flex-col h-screen bg-indigo-950">
+  <main class="flex flex-col h-screen">
     <div class="flex-1 overflow-hidden">
       <Combat />
     </div>

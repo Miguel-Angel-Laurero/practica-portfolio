@@ -83,6 +83,7 @@ export default async function randomSelection(count = 6, excludeNames = []) {
         sprite: sprite,
         types: details.types || [],
         attacks: attacks,
+        learnableMoves: details.moves?.map((m) => ({ name: m.move.name, url: m.move.url })) ?? [],
       })
     } catch (err) {
       console.warn('randomSelection: failed to load details for', creatureSummary.name, err)

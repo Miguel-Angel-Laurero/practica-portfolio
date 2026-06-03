@@ -8,6 +8,7 @@ export const useTowerManagerStore = defineStore('towerManager', {
     currentFloor: 0,
     maxFloorReached: 0,
     floorsSurvivals: [],
+    selectedMode: null, // 'female' | 'male'
   }),
 
   getters: {
@@ -21,18 +22,12 @@ export const useTowerManagerStore = defineStore('towerManager', {
   },
 
   actions: {
-    async nextFloor() {
+    nextFloor() {
       this.currentFloor++
       if (this.currentFloor > this.maxFloorReached) {
         this.maxFloorReached = this.currentFloor
       }
-      const combatStore = useCombatStore()
-      const { enemyCount } = this.getCurrentFloorEnemyDifficulty()
-      const newEnemyTeam = await randomSelection(enemyCount)
-      combatStore.setEnemyTeamFromObjects(newEnemyTeam)
-      combatStore.resetBattle()
-
-      await router.push({ name: 'combat' })
+      this.checkEvents()  
     },
 
     resetTower() {
@@ -46,6 +41,36 @@ export const useTowerManagerStore = defineStore('towerManager', {
         timestamp: new Date().toISOString(),
         ...floorData,
       })
+    },
+
+    selectMode(mode) {
+      this.selectedMode = mode
+      if (mode === 'female') {
+        router.push({ name: 'choose-pokemon' })
+      } else {
+        router.push({ name: 'train' })
+      }
+    },
+    //comprobacion de si ocurre evento y que tipo de vento ocurre
+    async checkEvents() {
+      if (this.currentFloor % 10 === 0) {
+        //piso de combate con boss
+        setTimeout(await router.push({ name: 'combat' }),1200)
+        return
+      } else if (this.currentFloor % 5 === 0) {
+        //piso de evento
+        await router.push({ name: 'event' })
+        return
+      } else {
+        //piso de combate normal
+        const combatStore = useCombatStore()
+        const { enemyCount } = this.getCurrentFloorEnemyDifficulty()
+        const newEnemyTeam = await randomSelection(enemyCount)
+        combatStore.setEnemyTeamFromObjects(newEnemyTeam)
+        combatStore.resetBattle()
+
+        await router.push({ name: 'combat' })
+      }
     },
 
     getCurrentFloorEnemyDifficulty() {

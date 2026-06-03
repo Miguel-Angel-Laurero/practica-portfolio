@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-indigo-950 h-full p-8 relative flex flex-col">
+  <div class="bg-blue-950 h-full p-8 relative flex flex-col">
     <div class="flex justify-between items-center mb-6">
       <RouterLink class="bg-blue-100 hover:bg-blue-200 p-2 rounded-xl" to="/">Salir de la torre</RouterLink>
       <h1 class="flex text-4xl font-bold text-white items-center">Piso {{ towerManager.getCurrentFloor || 1 }}</h1>
