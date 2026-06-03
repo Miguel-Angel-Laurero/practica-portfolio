@@ -1,6 +1,8 @@
 import router from '@/router'
 import { defineStore } from 'pinia'
 import { damageCalculator } from '@/helpers/damageCalculator'
+import { bonifierCalculator } from '@/helpers/bonifierCalculator'
+import { playerGoesFirst } from '@/helpers/combatUtils'
 
 const cloneCreature = (creature) => ({ ...creature })
 
@@ -14,21 +16,25 @@ export const useCombatStore = defineStore('combat', {
     logs: [],
     battleResult: '',
   }),
+
   getters: {
     alivePlayers: (state) => state.playerTeam.filter((character) => character.hp > 0),
     aliveEnemies: (state) => state.enemyTeam.filter((character) => character.hp > 0),
     activePlayer: (state) => state.playerTeam[state.activePlayerIndex] ?? null,
     activeEnemy: (state) => state.enemyTeam[state.activeEnemyIndex] ?? null,
   },
+
   actions: {
     setPlayerTeamFromObjects(creatures) {
       this.playerTeam = creatures.map(cloneCreature)
       this.activePlayerIndex = 0
     },
+
     setEnemyTeamFromObjects(creatures) {
       this.enemyTeam = creatures.map(cloneCreature)
       this.activeEnemyIndex = 0
     },
+
     resetBattle() {
       this.currentTurn = 'player'
       this.battleResult = ''
@@ -56,12 +62,11 @@ export const useCombatStore = defineStore('combat', {
       const previous = this.activePlayer?.name
       this.activePlayerIndex = newIndex
       this.addLog(`${previous} vuelve. ¡Adelante, ${this.activePlayer.name}!`)
-      this.checkBattleStatus();
     },
-    // Llamado automáticamente cuando el activo cae en combate
+
     autoSwitchActivePlayer() {
       const nextIndex = this.playerTeam.findIndex(
-        (c, i) => i !== this.activePlayerIndex && c.hp > 0
+        (c, i) => i !== this.activePlayerIndex && c.hp > 0,
       )
       if (nextIndex !== -1) {
         this.activePlayerIndex = nextIndex
@@ -71,7 +76,7 @@ export const useCombatStore = defineStore('combat', {
 
     autoSwitchActiveEnemy() {
       const nextIndex = this.enemyTeam.findIndex(
-        (c, i) => i !== this.activeEnemyIndex && c.hp > 0
+        (c, i) => i !== this.activeEnemyIndex && c.hp > 0,
       )
       if (nextIndex !== -1) {
         this.activeEnemyIndex = nextIndex
@@ -84,27 +89,60 @@ export const useCombatStore = defineStore('combat', {
 
       switch (actionType) {
         case 'skill':
-          this.attackActiveEnemy(attack)
+          this.resolveRound(attack)
           break
         case 'items':
           break
         case 'flee':
           this.addLog('Tu equipo huye del combate.')
           if (confirm('¿Seguro que quieres huir de este combate?')) {
-            
             router.push('/')
           }
           return
       }
-
-      this.checkBattleStatus()
     },
+
+resolveRound(attack) {
+  const goFirst = playerGoesFirst(this.activePlayer, this.activeEnemy)
+  this.addLog(`${goFirst ? this.activePlayer.name : this.activeEnemy.name} ataca primero.`)
+  this.currentTurn = 'resolving'
+
+  if (goFirst) {
+    const enemyFainted = this.attackActiveEnemy(attack)
+    if (this.checkBattleStatus()) return
+    if (enemyFainted) return // 👈 enemigo KO, no contraataca
+
+    setTimeout(() => {
+      this.enemyAttack()
+      this.checkBattleStatus()
+    }, 1200)
+  } else {
+    const playerFainted = this.enemyAttack()
+    if (this.checkBattleStatus()) return
+    if (playerFainted) return // 👈 jugador KO, no contraataca
+
+    setTimeout(() => {
+      this.attackActiveEnemy(attack)
+      this.checkBattleStatus()
+    }, 1200)
+  }
+},
 
     performAttack(attacker, target, attack = { name: 'Ataque', power: 15 }) {
       if (!attacker || !target) return 0
+      //efectividad
+      const effectiveness = bonifierCalculator(attack, attacker, target)
 
-      const damage = Math.round(damageCalculator(attack.power, attacker, target))
-      
+      if (effectiveness === 0) {
+        this.addLog(`¡No afecta a ${target.name}!`)
+        return 0
+      } else if (effectiveness < 1) {
+        this.addLog(`No es muy eficaz...`)
+      } else if (effectiveness > 1) {
+        this.addLog(`¡Es muy eficaz!`)
+      }
+
+      const damage = Math.round(damageCalculator(attack, attacker, target, effectiveness))
       target.hp = Math.max(0, target.hp - damage)
       this.addLog(`${attacker.name} usa ${attack.name} contra ${target.name} por ${damage} de daño.`)
       return damage
@@ -114,56 +152,47 @@ export const useCombatStore = defineStore('combat', {
       const attacker = this.activePlayer
       const target = this.activeEnemy
       if (!attacker || !target) return
-
       this.performAttack(attacker, target, attack)
-
-      // Si el enemigo activo cae, avanzar automáticamente
-      if (target.hp <= 0) this.autoSwitchActiveEnemy()
+      if (target.hp <= 0) {
+        this.addLog('El '+target.name+' rival ha sido debilitado.')
+        this.autoSwitchActiveEnemy()
+        return true
+      } 
     },
-    
-    enemyTurn() {
+
+    enemyAttack() {
       const attacker = this.activeEnemy
       const target = this.activePlayer
-
-      if (!attacker || !target) {
-        this.checkBattleStatus()
-        return
-      }
-
-      const attack = attacker.attacks?.[0] || { name: 'Ataque enemigo', power: 10 }
+      if (!attacker || !target) return
+      const attack =
+        attacker.attacks?.[Math.floor(Math.random() * attacker.attacks.length)] ||
+        { name: 'Ataque enemigo', power: 10 }
       this.performAttack(attacker, target, attack)
-
-      // Si el jugador activo cae, avanzar automáticamente
-      if (target.hp <= 0) this.autoSwitchActivePlayer()
-
-      this.checkBattleStatus()
+      if (target.hp <= 0) { 
+        this.addLog(target.name+' ha sido debilitado.')
+        this.autoSwitchActivePlayer()
+        return true
+      }
     },
 
+    // Devuelve true si la batalla terminó
     checkBattleStatus() {
       if (this.aliveEnemies.length === 0) {
         this.addLog('Victoria. Has derrotado al equipo enemigo.')
         this.currentTurn = 'game_over'
         this.battleResult = '¡Victoria! Has derrotado al equipo enemigo.'
-        return
+        return true
       }
-
       if (this.alivePlayers.length === 0) {
         this.addLog('Derrota. Tu equipo ha caido.')
         this.currentTurn = 'game_over'
         this.battleResult = 'Derrota. Tu equipo ha caido.'
-        return
+        return true
       }
+      this.currentTurn = 'player'
+      return false
+    },
 
-      if (this.currentTurn === 'player') {
-        this.currentTurn = 'enemy'
-        setTimeout(() => this.enemyTurn(), 1200)
-      } else if (this.currentTurn === 'enemy') {
-        this.currentTurn = 'player'
-      }
-    },
-    finishBattle() {
-      router.push('/')
-    },
     addLog(message) {
       this.logs.unshift(message)
     },

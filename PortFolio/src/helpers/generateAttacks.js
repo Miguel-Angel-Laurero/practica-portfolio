@@ -5,10 +5,10 @@ export async function startingAttacks(pokemon) {
 
   if (attackCount === 0) {
     return [
-      { name: 'Golpe', power: 10, effects: [] },
-      { name: 'Impactrueno', power: 12, effects: [] },
-      { name: 'Placaje', power: 8, effects: [] },
-      { name: 'Arañazo', power: 6, effects: [] },
+      { name: 'Golpe', power: 10, type: 'normal', effects: [] },
+      { name: 'Impactrueno', power: 40, type: 'electric', effects: [] },
+      { name: 'Placaje', power: 50, type: 'normal', effects: [] },
+      { name: 'Arañazo', power: 40, type: 'normal', effects: [] },
     ]
   }
 
@@ -25,6 +25,7 @@ export async function startingAttacks(pokemon) {
         return {
           name: move.name,
           power: attackDetails.power ?? 0,
+          type: attackDetails.type?.name ?? 'normal', // 👈
           effects: attackDetails.effect_entries || [],
           damageClass: attackDetails.damage_class?.name,
         }
@@ -34,6 +35,7 @@ export async function startingAttacks(pokemon) {
           name: move.name,
           power: 0,
           effects: [],
+
           damageClass: null,
         }
       }

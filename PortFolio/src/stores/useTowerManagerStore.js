@@ -1,4 +1,7 @@
 import { defineStore } from 'pinia'
+import router from '@/router'
+import randomSelection from '@/composables/randomSelection'
+import { useCombatStore } from '@/stores/useCombatStore'
 
 export const useTowerManagerStore = defineStore('towerManager', {
   state: () => ({
@@ -18,11 +21,18 @@ export const useTowerManagerStore = defineStore('towerManager', {
   },
 
   actions: {
-    nextFloor() {
+    async nextFloor() {
       this.currentFloor++
       if (this.currentFloor > this.maxFloorReached) {
         this.maxFloorReached = this.currentFloor
       }
+      const combatStore = useCombatStore()
+      const { enemyCount } = this.getCurrentFloorEnemyDifficulty()
+      const newEnemyTeam = await randomSelection(enemyCount)
+      combatStore.setEnemyTeamFromObjects(newEnemyTeam)
+      combatStore.resetBattle()
+
+      await router.push({ name: 'combat' })
     },
 
     resetTower() {
@@ -46,6 +56,9 @@ export const useTowerManagerStore = defineStore('towerManager', {
         hpMultiplier: multiplier,
         enemyCount: this.currentFloor <= 5 ? 3 : Math.min(5, 3 + Math.floor((this.currentFloor - 5) / 5)),
       }
+    },
+    finishBattle() {
+      router.push('/')
     },
   },
 })

@@ -17,6 +17,7 @@
         <CharacterCard
           v-if="activePlayer"
           :name="activePlayer.name"
+          :level="activePlayer.level"
           :hp="activePlayer.hp"
           :maxHp="activePlayer.maxHp"
           :sprite="activePlayer.sprite"
@@ -48,6 +49,7 @@
         <CharacterCard
           v-if="activeEnemy"
           :name="activeEnemy.name"
+          :level="activeEnemy.level"
           :hp="activeEnemy.hp"
           :maxHp="activeEnemy.maxHp"
           :sprite="activeEnemy.sprite"
@@ -80,7 +82,13 @@
         <p class="text-sm text-slate-600 mb-6">El combate ha terminado. Pulsa el botón para volver al inicio.</p>
         <button
           class="bg-indigo-950 text-white rounded-lg px-6 py-3 font-semibold hover:bg-indigo-800"
-          @click="combatStore.finishBattle()"
+          @click="towerManager.nextFloor()"
+        >
+          Siguiente Piso
+        </button>
+        <button
+          class="bg-indigo-950 text-white rounded-lg px-6 py-3 font-semibold hover:bg-indigo-800"
+          @click="towerManager.finishBattle()"
         >
           Volver al inicio
         </button>
@@ -96,6 +104,9 @@ import { useCombatStore } from '@/stores/useCombatStore'
 import { useTowerManagerStore } from '@/stores/useTowerManagerStore'
 import { storeToRefs } from 'pinia'
 
+
+
+
 const combatStore = useCombatStore()
 const towerManager = useTowerManagerStore()
 const {
@@ -108,4 +119,5 @@ const {
   currentTurn,
   battleResult,
 } = storeToRefs(combatStore)
+
 </script>

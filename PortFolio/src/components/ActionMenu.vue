@@ -1,17 +1,17 @@
 <template>
   <div class="grid grid-cols-2 gap-2 p-2 bg-gray-100 rounded-lg overflow-y-auto">
     <template v-if="actionMenuStore.currentMenu === 'main'">
-      <button class="action-btn" @click="actionMenuStore.openMenu('attack')">Atacar</button>
-      <button class="action-btn" @click="actionMenuStore.openMenu('switch')">Cambiar</button>
-      <button class="action-btn" @click="actionMenuStore.openMenu('items')">Items</button>
-      <button class="action-btn" @click="executeAction('flee')">Huir</button>
+      <button class="action-btn hover:bg-blue-50" @click="actionMenuStore.openMenu('attack')">Atacar</button>
+      <button class="action-btn hover:bg-blue-50" @click="actionMenuStore.openMenu('switch')">Cambiar</button>
+      <button class="action-btn hover:bg-blue-50" @click="actionMenuStore.openMenu('items')">Items</button>
+      <button class="action-btn hover:bg-blue-50" @click="executeAction('flee')">Huir</button>
     </template>
 
     <template v-else-if="actionMenuStore.currentMenu === 'attack'">
       <button
         v-for="attack in activePlayerAttacks"
         :key="attack.name"
-        class="action-btn flex flex-col items-start m-4 p-4 bg-gray-50" 
+        class="action-btn flex flex-col items-start m-4 p-4 bg-gray-50  hover:bg-blue-50" 
         @click="executeAction('skill', attack)"
       >
         <span class="font-bold capitalize">{{ attack.name }}</span>

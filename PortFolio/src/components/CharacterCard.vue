@@ -2,7 +2,7 @@
     <div class="grid grid-cols-2 p-4 text-white">
         <img v-if="sprite" :src="sprite" :alt="name" class="w-48 h-48 object-contain mx-auto">
         <div>
-            <h2 class="text-xl font-bold">{{ name }}</h2>
+            <h2 class="text-xl font-bold">{{ name }} Lvl:{{ level }}</h2>
             <div class="w-full h-4 bg-white/40 rounded-full overflow-hidden">
             <div
                 class="h-full rounded-full transition-all"
@@ -21,6 +21,10 @@
     const props = defineProps({
         name: {
             type: String,
+            required: true,
+        },
+        level: {
+            type: Number,
             required: true,
         },
         hp: {
