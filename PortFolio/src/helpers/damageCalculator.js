@@ -15,7 +15,7 @@ export function damageCalculator(attack, attacker = {}, target = {}, effectivene
   const level = attacker.level
   // const modifier =  1;
   const modifier = effectiveness;
-  console.log(level)
+  console.log(modifier, level)
 
   const rawDamage =
     ((((2 * level) / 5 + 2) * attackPower * (attackStat / Math.max(1, defenseStat))) / 50 + 2) * modifier

@@ -3,9 +3,13 @@ import { startingAttacks } from '@/helpers/generateAttacks'
 
 const LEVEL = 5
 
-function calcStat(base, level, isHp = false) {
-  if (isHp) return Math.floor((2 * base * level) / 100) + level + 10
-  return Math.floor((2 * base * level) / 100) + 5
+function randomIV() {
+  return Math.floor(Math.random() * 32)
+}
+
+function calcStat(base, iv, level, isHp = false) {
+  if (isHp) return Math.floor(((2 * base + iv) * level) / 100) + level + 10
+  return Math.floor(((2 * base + iv) * level) / 100) + 5
 }
 
 export default async function randomSelection(count = 6, excludeNames = []) {
@@ -30,7 +34,6 @@ export default async function randomSelection(count = 6, excludeNames = []) {
 
   while (optionList.length < count && selectedIndexes.size < availablePool.length) {
     const randomIndex = Math.floor(Math.random() * availablePool.length)
-    console.log(randomIndex)
     if (selectedIndexes.has(randomIndex)) continue
 
     selectedIndexes.add(randomIndex)
@@ -41,16 +44,22 @@ export default async function randomSelection(count = 6, excludeNames = []) {
       const detailsResponse = await fetch(creatureSummary.url)
       if (!detailsResponse.ok) throw new Error('Error fetching creature details')
       const details = await detailsResponse.json()
-      const baseHp = details.stats?.find((s) => s.stat.name === 'hp')?.base_stat ?? 45
-      const hpStat = calcStat(baseHp, LEVEL, true)
-      const scaledStats = details.stats?.map((s) => ({
-        ...s,
-        base_stat: calcStat(s.base_stat, LEVEL, s.stat.name === 'hp'),
-      })) || []
+
+      const scaledStats = (details.stats || []).map((s) => {
+        const iv = randomIV()
+        const isHp = s.stat.name === 'hp'
+        return {
+          ...s,
+          base_stat: calcStat(s.base_stat, iv, LEVEL, isHp),
+          base_stat_base: s.base_stat, // 👈 base original de la API
+          iv,                          // 👈 IV fijo para recalcular en levelup
+        }
+      })
+
+      const hpStat = scaledStats.find((s) => s.stat.name === 'hp')?.base_stat ?? 10
       const sprite = details.sprites?.other?.['official-artwork']?.front_default || details.sprites?.front_default
 
-      // seccion de carga de ataques filtrando megas y g-max
-      const EXCLUDED_SUFFIXES = ['-mega', '-gmax', '-mega-z']
+      const EXCLUDED_SUFFIXES = ['-mega', '-gmax', '-mega-z', '-mega-x']
       const baseName = EXCLUDED_SUFFIXES.reduce(
         (name, suffix) => (name.endsWith(suffix) ? name.slice(0, -suffix.length) : name),
         details.name,
@@ -59,13 +68,10 @@ export default async function randomSelection(count = 6, excludeNames = []) {
       let attackDetails = details
       if (baseName !== details.name) {
         const baseResponse = await fetch(`https://pokeapi.co/api/v2/pokemon/${baseName}`)
-        if (baseResponse.ok) {
-          attackDetails = await baseResponse.json()
-          console.log(attackDetails)
-        }
+        if (baseResponse.ok) attackDetails = await baseResponse.json()
       }
 
-const attacks = await startingAttacks(attackDetails)
+      const attacks = await startingAttacks(attackDetails)
 
       optionList.push({
         id: details.id?.toString() || creatureSummary.name,

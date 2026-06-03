@@ -36,7 +36,7 @@ export const useTowerManagerStore = defineStore('towerManager', {
     },
 
     resetTower() {
-      this.currentFloor = 0
+      this.currentFloor = 1
       this.floorsSurvivals = []
     },
 

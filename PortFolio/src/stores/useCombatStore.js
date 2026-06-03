@@ -4,7 +4,10 @@ import { damageCalculator } from '@/helpers/damageCalculator'
 import { bonifierCalculator } from '@/helpers/bonifierCalculator'
 import { playerGoesFirst } from '@/helpers/combatUtils'
 
-const cloneCreature = (creature) => ({ ...creature })
+const cloneCreature = (creature) => ({
+  ...creature,
+  stats: creature.stats.map((s) => ({ ...s })),
+})
 
 export const useCombatStore = defineStore('combat', {
   state: () => ({
@@ -130,6 +133,8 @@ resolveRound(attack) {
 
     performAttack(attacker, target, attack = { name: 'Ataque', power: 15 }) {
       if (!attacker || !target) return 0
+
+      this.addLog(`${attacker.name} usa ${attack.name} contra ${target.name}`)
       //efectividad
       const effectiveness = bonifierCalculator(attack, attacker, target)
 
@@ -144,7 +149,6 @@ resolveRound(attack) {
 
       const damage = Math.round(damageCalculator(attack, attacker, target, effectiveness))
       target.hp = Math.max(0, target.hp - damage)
-      this.addLog(`${attacker.name} usa ${attack.name} contra ${target.name} por ${damage} de daño.`)
       return damage
     },
 
@@ -179,8 +183,11 @@ resolveRound(attack) {
     checkBattleStatus() {
       if (this.aliveEnemies.length === 0) {
         this.addLog('Victoria. Has derrotado al equipo enemigo.')
+        this.playerTeam.forEach((pokemon) => {
+          this.levelUp(pokemon)
+        })
         this.currentTurn = 'game_over'
-        this.battleResult = '¡Victoria! Has derrotado al equipo enemigo.'
+        this.battleResult = '¡Victoria! Has derrotado al equipo enemigo y tu equipo se ha hecho mas fuerte'
         return true
       }
       if (this.alivePlayers.length === 0) {
@@ -191,6 +198,30 @@ resolveRound(attack) {
       }
       this.currentTurn = 'player'
       return false
+    },
+    levelUp(pokemon) {
+      const index = this.playerTeam.findIndex((p) => p.id === pokemon.id)
+      console.log('levelUp index:', index)
+      console.log('pokemon antes:', JSON.parse(JSON.stringify(this.playerTeam[index])))
+      if (index === -1) return
+
+      const p = this.playerTeam[index]
+      p.level += 1
+
+      p.stats = p.stats.map((s) => {
+        const isHp = s.stat.name === 'hp'
+        const newStat = isHp
+          ? Math.floor(((2 * s.base_stat_base + s.iv) * p.level) / 100) + p.level + 10
+          : Math.floor(((2 * s.base_stat_base + s.iv) * p.level) / 100) + 5
+        return { ...s, base_stat: newStat }
+      })
+
+      const newMaxHp = p.stats.find((s) => s.stat.name === 'hp')?.base_stat ?? p.maxHp
+      const hpGained = newMaxHp - p.maxHp
+      p.maxHp = newMaxHp
+      p.hp = Math.min(p.maxHp, p.hp + hpGained)
+
+      this.addLog(`¡${p.name} ha subido al nivel ${p.level}!`)
     },
 
     addLog(message) {
