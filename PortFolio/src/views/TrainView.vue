@@ -10,7 +10,6 @@
       </div>
     </template>
 
-    <!-- SUBIR NIVEL -->
     <template v-else-if="mode === 'levelup'">
       <p class="text-gray-300">Todo tu equipo subirá un nivel.</p>
       <div class="flex flex-col gap-3 w-full max-w-md">
@@ -26,12 +25,17 @@
           </div>
         </div>
       </div>
-      <button class="train-btn mt-4" @click="applyLevelUp">Confirmar</button>
+      <button 
+        class="train-btn mt-4 disabled:opacity-50 disabled:cursor-not-allowed" 
+        :disabled="isSubmitting"
+        @click="applyLevelUp"
+      >
+        {{ isSubmitting ? 'Subiendo nivel...' : 'Confirmar' }}
+      </button>
     </template>
 
-    <!-- CAMBIAR MOVIMIENTOS -->
     <template v-else-if="mode === 'moves'">
-      <p class="text-gray-300 mb-2">Elige un nuevo movimiento para cada Pokémon.</p>
+      <p class="text-gray-300 mb-2">Elige un nuevo movimiento para los Pokémon que quieras (Opcional).</p>
 
       <div v-if="loadingMoves" class="text-gray-400">Cargando movimientos...</div>
 
@@ -41,12 +45,20 @@
           :key="pokemon.id"
           class="bg-white/10 rounded-xl p-4"
         >
-          <div class="flex items-center gap-3 mb-3">
-            <img :src="pokemon.sprite" :alt="pokemon.name" class="w-12 h-12 object-contain" />
-            <p class="font-bold capitalize">{{ pokemon.name }}</p>
+          <div class="flex items-center justify-between gap-3 mb-3">
+            <div class="flex items-center gap-3">
+              <img :src="pokemon.sprite" :alt="pokemon.name" class="w-12 h-12 object-contain" />
+              <p class="font-bold capitalize">{{ pokemon.name }}</p>
+            </div>
+            <button 
+              v-if="selectedNewMove[pIndex]" 
+              @click="clearPokemonSelection(pIndex)"
+              class="text-xs text-red-400 hover:underline"
+            >
+              No cambiar nada
+            </button>
           </div>
 
-          <!-- Movimientos nuevos disponibles -->
           <div class="flex flex-col gap-2 mb-3">
             <p class="text-xs text-gray-400 mb-1">Elige un movimiento nuevo:</p>
             <button
@@ -61,9 +73,8 @@
             </button>
           </div>
 
-          <!-- Movimiento a reemplazar -->
           <div v-if="selectedNewMove[pIndex]">
-            <p class="text-xs text-gray-400 mb-1">¿Qué movimiento reemplazar?</p>
+            <p class="text-xs text-gray-400 mb-1">¿Qué movimiento reemplazar? <span class="text-red-400">*</span></p>
             <div class="flex gap-2 flex-wrap">
               <button
                 v-for="(attack, aIndex) in pokemon.attacks"
@@ -80,19 +91,18 @@
       </div>
 
       <button
-        class="train-btn mt-4"
-        :disabled="!allMovesSelected"
-        :class="allMovesSelected ? '' : 'opacity-50 cursor-not-allowed'"
+        class="train-btn mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
+        :disabled="!canSubmitMoves || isSubmitting"
         @click="applyMoveChanges"
       >
-        Confirmar cambios
+        {{ isSubmitting ? 'Guardando...' : 'Confirmar cambios' }}
       </button>
     </template>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useCombatStore } from '@/stores/useCombatStore'
 import { useTowerManagerStore } from '@/stores/useTowerManagerStore'
 
@@ -101,27 +111,31 @@ const towerManager = useTowerManagerStore()
 
 const mode = ref(null)
 const loadingMoves = ref(false)
-const newMoves = ref([]) // array de arrays, uno por pokemon
+const isSubmitting = ref(false) // Controla el bloqueo de los botones de confirmación
+const newMoves = ref([]) 
 const selectedNewMove = ref([])
 const selectedReplaceIndex = ref([])
 
-const allMovesSelected = computed(() =>
-  combatStore.playerTeam.every(
-    (_, i) => selectedNewMove.value[i] && selectedReplaceIndex.value[i] !== undefined,
-  ),
+// LÓGICA OPCIONAL: El usuario puede confirmar si para cada pokémon se cumple:
+// O bien NO ha elegido ningún movimiento nuevo, 
+// O bien si eligió uno, también ha seleccionado el índice del ataque a reemplazar.
+const canSubmitMoves = computed(() =>
+  combatStore.playerTeam.every((_, i) => {
+    const hasNew = !!selectedNewMove.value[i]
+    const hasReplace = selectedReplaceIndex.value[i] !== undefined
+    return !hasNew || (hasNew && hasReplace)
+  })
 )
 
 async function fetchNewMovesForTeam() {
   loadingMoves.value = true
   newMoves.value = await Promise.all(
     combatStore.playerTeam.map(async (pokemon) => {
-      // Obtener movimientos del pokemon que NO tenga ya
       const currentNames = pokemon.attacks.map((a) => a.name)
       const allMoves = pokemon.learnableMoves ?? []
       const available = allMoves.filter((m) => !currentNames.includes(m.name))
       const shuffled = available.sort(() => Math.random() - 0.5).slice(0, 3)
 
-      // Fetchear detalles de cada movimiento
       return Promise.all(
         shuffled.map(async (m) => {
           try {
@@ -144,20 +158,44 @@ async function fetchNewMovesForTeam() {
   loadingMoves.value = false
 }
 
-function applyLevelUp() {
-  combatStore.playerTeam.forEach((pokemon) => combatStore.levelUp(pokemon))
-  towerManager.nextFloor()
+// Resetea la selección de un Pokémon específico
+function clearPokemonSelection(index) {
+  selectedNewMove.value[index] = null
+  selectedReplaceIndex.value[index] = undefined
 }
 
-function applyMoveChanges() {
-  combatStore.playerTeam.forEach((pokemon, i) => {
-    const replaceIdx = selectedReplaceIndex.value[i]
-    const newMove = selectedNewMove.value[i]
-    if (replaceIdx !== undefined && newMove) {
-      pokemon.attacks[replaceIdx] = newMove
-    }
-  })
-  towerManager.nextFloor()
+// Bloqueo añadido al subir de nivel
+async function applyLevelUp() {
+  isSubmitting.value = true
+  try {
+    combatStore.playerTeam.forEach((pokemon) => combatStore.levelUp(pokemon))
+    // Añadimos un micro-delay por UX antes de pasar de piso, o por si necesitas async en el store
+    await new Promise(resolve => setTimeout(resolve, 300))
+    towerManager.nextFloor()
+  } catch (error) {
+    console.error(error)
+    isSubmitting.value = false
+  }
+}
+
+// Guardado de movimientos (solo para los que el usuario sí eligió cambios)
+async function applyMoveChanges() {
+  isSubmitting.value = true
+  try {
+    combatStore.playerTeam.forEach((pokemon, i) => {
+      const replaceIdx = selectedReplaceIndex.value[i]
+      const newMove = selectedNewMove.value[i]
+      // Solo muta el ataque si efectivamente se seleccionaron ambos campos
+      if (replaceIdx !== undefined && newMove) {
+        pokemon.attacks[replaceIdx] = newMove
+      }
+    })
+    await new Promise(resolve => setTimeout(resolve, 300))
+    towerManager.nextFloor()
+  } catch (error) {
+    console.error(error)
+    isSubmitting.value = false
+  }
 }
 
 onMounted(() => {
@@ -165,8 +203,6 @@ onMounted(() => {
   selectedReplaceIndex.value = combatStore.playerTeam.map(() => undefined)
 })
 
-// Cargar movimientos cuando se elige ese modo
-import { watch } from 'vue'
 watch(mode, (val) => {
   if (val === 'moves') fetchNewMovesForTeam()
 })

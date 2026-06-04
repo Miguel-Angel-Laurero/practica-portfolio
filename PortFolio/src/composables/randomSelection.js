@@ -1,5 +1,6 @@
 import { useApi } from '@/composables/useApi'
 import { startingAttacks } from '@/helpers/generateAttacks'
+import { fetchEvolutionData } from '@/helpers/evolutionHelper'
 
 const LEVEL = 5
 
@@ -83,7 +84,9 @@ export default async function randomSelection(count = 6, excludeNames = [], maxB
         }
   
         const attacks = await startingAttacks(attackDetails)
-  
+        // Dentro del push, después de tener details:
+        const nextEvolution = await fetchEvolutionData(details)
+        
         optionList.push({
           id: details.id?.toString() || creatureSummary.name,
           name: details.name,
@@ -95,6 +98,8 @@ export default async function randomSelection(count = 6, excludeNames = [], maxB
           types: details.types || [],
           attacks: attacks,
           learnableMoves: details.moves?.map((m) => ({ name: m.move.name, url: m.move.url })) ?? [],
+          nextEvolution,
+          item: [],
         })
       }
 

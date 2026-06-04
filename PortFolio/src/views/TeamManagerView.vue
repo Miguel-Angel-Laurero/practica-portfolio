@@ -63,6 +63,8 @@
           <div class="flex-1">
             <h2 class="text-base font-bold capitalize text-slate-100 mb-0.5">{{ pokemon.name }}</h2>
             <p class="text-xs text-slate-500 mb-2">Nv. {{ pokemon.level }}</p>
+            <p class="text-xs text-slate-500 mb-2">Item {{ pokemon.item[0] }}</p>
+
             <!-- HP bar -->
             <div class="flex justify-between text-xs text-slate-400 mb-1">
               <span>HP</span>

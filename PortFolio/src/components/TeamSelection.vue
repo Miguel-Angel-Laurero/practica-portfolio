@@ -5,6 +5,7 @@
   </div>
 
   <div v-else class="flex flex-col items-center p-4 gap-6">
+    <RouterLink class="bg-blue-100 hover:bg-blue-200 p-2 rounded-xl" to="/home">Salir de la torre</RouterLink>
     <span class="text-2xl font-bold">Elige tu equipo</span>
 
     <!-- Grid de criaturas disponibles -->

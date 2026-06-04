@@ -89,7 +89,7 @@ export const useTowerManagerStore = defineStore('towerManager', {
       } else {
         // Derrota: volver al inicio
         this.currentFloor = 0
-        router.push('/')
+        router.push('/home')
       }
     },
   },

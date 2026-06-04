@@ -207,15 +207,14 @@ resolveRound(attack) {
       this.currentTurn = 'player'
       return false
     },
-    levelUp(pokemon) {
+    async levelUp(pokemon) {
       const index = this.playerTeam.findIndex((p) => p.id === pokemon.id)
-      console.log('levelUp index:', index)
-      console.log('pokemon antes:', JSON.parse(JSON.stringify(this.playerTeam[index])))
       if (index === -1) return
 
       const p = this.playerTeam[index]
       p.level += 1
 
+      // Recalcular stats...
       p.stats = p.stats.map((s) => {
         const isHp = s.stat.name === 'hp'
         const newStat = isHp
@@ -230,6 +229,60 @@ resolveRound(attack) {
       p.hp = Math.min(p.maxHp, p.hp + hpGained)
 
       this.addLog(`¡${p.name} ha subido al nivel ${p.level}!`)
+
+      // Comprobar evolución
+      if (p.nextEvolution && p.level >= p.nextEvolution.minLevel) {
+        await this.evolve(index)
+      }
+    },
+
+    async evolve(index) {
+      const p = this.playerTeam[index]
+      const evolutionName = p.nextEvolution.name
+
+      try {
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${evolutionName}`)
+        const data = await res.json()
+
+        const { fetchEvolutionData } = await import('@/helpers/evolutionHelper')
+        const nextEvolution = await fetchEvolutionData(data)
+
+        // Mantener nivel, IVs y HP actual proporcional
+        const hpRatio = p.hp / p.maxHp
+
+        const scaledStats = data.stats.map((s) => {
+          const iv = p.stats.find((ps) => ps.stat.name === s.stat.name)?.iv ?? 0
+          const isHp = s.stat.name === 'hp'
+          return {
+            ...s,
+            base_stat: isHp
+              ? Math.floor(((2 * s.base_stat + iv) * p.level) / 100) + p.level + 10
+              : Math.floor(((2 * s.base_stat + iv) * p.level) / 100) + 5,
+            base_stat_base: s.base_stat,
+            iv,
+          }
+        })
+
+        const newMaxHp = scaledStats.find((s) => s.stat.name === 'hp')?.base_stat ?? p.maxHp
+        const sprite =
+          data.sprites?.other?.['official-artwork']?.front_default ||
+          data.sprites?.front_default
+
+        this.playerTeam[index] = {
+          ...p,
+          name: evolutionName,
+          stats: scaledStats,
+          maxHp: newMaxHp,
+          hp: Math.max(1, Math.round(newMaxHp * hpRatio)),
+          sprite,
+          types: data.types || [],
+          nextEvolution,
+        }
+
+        this.addLog(`¡${p.name} está evolucionando a ${evolutionName}!`)
+      } catch (err) {
+        console.warn('evolve: failed to load evolution data for', evolutionName, err)
+      }
     },
 
     addLog(message) {

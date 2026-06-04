@@ -35,10 +35,6 @@
             type: Number,
             default: 0,
         },
-        shield: {
-            type: Number,
-            default: 0,
-        },
         sprite: {
             type: String,
             default: null,
