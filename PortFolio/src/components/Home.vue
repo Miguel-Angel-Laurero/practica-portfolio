@@ -2,7 +2,7 @@
   <div class="flex flex-col items-center justify-center h-full bg-blue-950 text-white p-8 gap-6">
     <h1 class="text-4xl font-bold">Torre de Batalla</h1>
     <p class="text-gray-400 text-center max-w-sm">
-      Asciende por los pisos, derrota equipos enemigos y fortalece a tus Pokémon.
+      Asciende por los pisos, derrota equipos enemigos y fortalece a tus Pokémon para ser el mejor.
     </p>
 
     <div class="flex gap-8 text-center">
