@@ -1,110 +1,124 @@
 <template>
-  <div class="team-manager">
-    <div class="header">
-      <button class="back-btn" @click="$router.back()">← Volver</button>
-      <h1 class="title">Gestión de Equipo</h1>
-      <span class="floor-badge">Piso {{ towerStore.currentFloor }}</span>
+  <div class="min-h-screen bg-slate-900 p-4 text-slate-200 font-sans">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-6">
+      <button
+        class="bg-slate-800 border border-slate-700 text-slate-400 px-3 py-1.5 rounded-lg text-sm cursor-pointer hover:bg-slate-700 hover:text-slate-100 transition-colors"
+        @click="$router.back()"
+      >← Volver</button>
+      <h1 class="flex-1 text-xl font-bold text-slate-100 m-0">Gestión de Equipo</h1>
+      <span class="bg-blue-950 border border-blue-500 text-blue-300 px-3 py-1 rounded-full text-xs font-semibold">
+        Piso {{ towerStore.currentFloor }}
+      </span>
     </div>
 
-    <div v-if="playerTeam.length === 0" class="empty-state">
+    <!-- Empty -->
+    <div v-if="playerTeam.length === 0" class="text-center py-16 text-slate-500">
       <p>No hay ningún Pokémon en el equipo.</p>
     </div>
 
-    <div v-else class="team-grid">
+    <!-- Team list -->
+    <div v-else class="flex flex-col gap-4">
       <div
         v-for="(pokemon, index) in playerTeam"
         :key="pokemon.id"
-        class="pokemon-card"
-        :class="{ 'is-active': index === activePlayerIndex, 'is-fainted': pokemon.hp <= 0 }"
+        class="bg-slate-800 border rounded-2xl overflow-hidden cursor-pointer transition-all duration-200"
+        :class="{
+          'border-blue-500 shadow-[0_0_0_1px_rgba(59,130,246,0.13)]': index === activePlayerIndex,
+          'border-slate-700 hover:border-slate-500': index !== activePlayerIndex,
+          'opacity-60': pokemon.hp <= 0
+        }"
         @click="selectedIndex = selectedIndex === index ? null : index"
       >
-        <!-- Cabecera de la card -->
-        <div class="card-header">
-          <div class="card-header-left">
-            <span class="pokemon-index">#{{ index + 1 }}</span>
-            <span v-if="index === activePlayerIndex" class="active-badge">Activo</span>
-            <span v-if="pokemon.hp <= 0" class="fainted-badge">KO</span>
+        <!-- Card header -->
+        <div class="flex justify-between items-center px-4 py-2 bg-slate-950 border-b border-slate-800">
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-slate-500 font-semibold">#{{ index + 1 }}</span>
+            <span v-if="index === activePlayerIndex" class="bg-blue-700 text-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide">Activo</span>
+            <span v-if="pokemon.hp <= 0" class="bg-red-900 text-red-300 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">KO</span>
           </div>
-          <div class="type-badges">
+          <div class="flex gap-1">
             <span
               v-for="t in pokemon.types"
               :key="t.type.name"
-              class="type-badge"
-              :class="`type-${t.type.name}`"
+              class="text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize"
+              :class="typeClass(t.type.name)"
             >{{ t.type.name }}</span>
           </div>
         </div>
 
-        <!-- Sprite + nombre -->
-        <div class="card-body">
-          <div class="sprite-wrap">
+        <!-- Sprite + info -->
+        <div class="flex items-center gap-4 px-4 py-3">
+          <div class="w-18 h-18 flex-shrink-0 bg-slate-950 rounded-xl flex items-center justify-center" style="width:72px;height:72px">
             <img
               v-if="pokemon.sprite"
               :src="pokemon.sprite"
               :alt="pokemon.name"
-              class="sprite"
+              class="w-full h-full object-contain"
               :class="{ grayscale: pokemon.hp <= 0 }"
             />
-            <div v-else class="sprite-placeholder">?</div>
+            <span v-else class="text-3xl text-slate-600">?</span>
           </div>
-          <div class="pokemon-info">
-            <h2 class="pokemon-name">{{ pokemon.name }}</h2>
-            <p class="pokemon-level">Nv. {{ pokemon.level }}</p>
-
-            <!-- Barra de HP -->
-            <div class="hp-section">
-              <div class="hp-label">
-                <span>HP</span>
-                <span class="hp-numbers">{{ pokemon.hp }} / {{ pokemon.maxHp }}</span>
-              </div>
-              <div class="hp-bar-bg">
-                <div
-                  class="hp-bar-fill"
-                  :class="hpColor(pokemon)"
-                  :style="{ width: hpPercent(pokemon) + '%' }"
-                />
-              </div>
+          <div class="flex-1">
+            <h2 class="text-base font-bold capitalize text-slate-100 mb-0.5">{{ pokemon.name }}</h2>
+            <p class="text-xs text-slate-500 mb-2">Nv. {{ pokemon.level }}</p>
+            <!-- HP bar -->
+            <div class="flex justify-between text-xs text-slate-400 mb-1">
+              <span>HP</span>
+              <span class="font-semibold text-slate-300">{{ pokemon.hp }} / {{ pokemon.maxHp }}</span>
+            </div>
+            <div class="h-1.5 bg-slate-950 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-300"
+                :class="hpColor(pokemon)"
+                :style="{ width: hpPercent(pokemon) + '%' }"
+              />
             </div>
           </div>
         </div>
 
-        <!-- Stats expandibles -->
+        <!-- Expandible stats -->
         <Transition name="expand">
-          <div v-if="selectedIndex === index" class="card-details">
-            <div class="stats-grid">
-              <div v-for="stat in pokemon.stats" :key="stat.stat.name" class="stat-row">
-                <span class="stat-name">{{ statLabel(stat.stat.name) }}</span>
-                <div class="stat-bar-bg">
+          <div v-if="selectedIndex === index" class="border-t border-slate-800 p-4">
+
+            <!-- Stats -->
+            <div class="flex flex-col gap-1.5 mb-4">
+              <div v-for="stat in pokemon.stats" :key="stat.stat.name" class="flex items-center gap-2">
+                <span class="w-14 text-[11px] text-slate-500 text-right flex-shrink-0">{{ statLabel(stat.stat.name) }}</span>
+                <div class="flex-1 h-1.5 bg-slate-950 rounded-full overflow-hidden">
                   <div
-                    class="stat-bar-fill"
+                    class="h-full rounded-full"
+                    style="background: linear-gradient(90deg, #3b82f6, #8b5cf6); transition: width 0.5s ease"
                     :style="{ width: statPercent(stat.base_stat) + '%' }"
                   />
                 </div>
-                <span class="stat-value">{{ stat.base_stat }}</span>
+                <span class="w-7 text-xs font-semibold text-slate-300 text-right">{{ stat.base_stat }}</span>
               </div>
             </div>
 
-            <div class="attacks-section">
-              <h3 class="section-title">Ataques</h3>
-              <div class="attacks-grid">
-                <div
-                  v-for="attack in pokemon.attacks"
-                  :key="attack.name"
-                  class="attack-chip"
-                  :class="`type-${attack.type}`"
-                >
-                  <span class="attack-name">{{ attack.name }}</span>
-                  <span class="attack-meta">
-                    <span v-if="attack.power">💥 {{ attack.power }}</span>
-                    <span v-if="attack.damageClass" class="attack-class">{{ attack.damageClass }}</span>
-                  </span>
-                </div>
+            <!-- Attacks -->
+            <h3 class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Ataques</h3>
+            <div class="grid grid-cols-2 gap-1.5">
+              <div
+                v-for="attack in pokemon.attacks"
+                :key="attack.name"
+                class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-2 flex flex-col gap-0.5"
+              >
+                <span class="text-xs font-semibold capitalize text-slate-200">{{ attack.name }}</span>
+                <span class="flex gap-2 text-[11px] text-slate-500">
+                  <span v-if="attack.power">💥 {{ attack.power }}</span>
+                  <span v-if="attack.damageClass" class="capitalize">{{ attack.damageClass }}</span>
+                </span>
               </div>
             </div>
           </div>
         </Transition>
 
-        <div class="expand-hint">{{ selectedIndex === index ? '▲ Ocultar' : '▼ Ver detalles' }}</div>
+        <!-- Expand hint -->
+        <div class="text-center text-[11px] text-slate-600 py-1.5 border-t border-slate-800 select-none">
+          {{ selectedIndex === index ? '▲ Ocultar' : '▼ Ver detalles' }}
+        </div>
       </div>
     </div>
   </div>
@@ -125,9 +139,9 @@ const selectedIndex = ref(null)
 const hpPercent = (p) => Math.round((p.hp / p.maxHp) * 100)
 const hpColor = (p) => {
   const pct = hpPercent(p)
-  if (pct > 50) return 'hp-green'
-  if (pct > 20) return 'hp-yellow'
-  return 'hp-red'
+  if (pct > 50) return 'bg-green-500'
+  if (pct > 20) return 'bg-yellow-400'
+  return 'bg-red-500'
 }
 
 const statPercent = (val) => Math.min(100, Math.round((val / 150) * 100))
@@ -140,254 +154,34 @@ const statLabel = (name) => ({
   'special-defense': 'Sp. Def',
   speed: 'Vel.',
 }[name] ?? name)
+
+const typeClass = (type) => ({
+  fire:     'bg-orange-950 text-orange-300',
+  water:    'bg-blue-950 text-blue-300',
+  grass:    'bg-green-950 text-green-300',
+  electric: 'bg-yellow-950 text-yellow-300',
+  psychic:  'bg-pink-950 text-pink-300',
+  ice:      'bg-cyan-950 text-cyan-300',
+  dragon:   'bg-indigo-950 text-indigo-300',
+  dark:     'bg-stone-900 text-stone-400',
+  fairy:    'bg-fuchsia-950 text-fuchsia-300',
+  fighting: 'bg-red-950 text-red-300',
+  poison:   'bg-purple-950 text-purple-300',
+  ground:   'bg-amber-950 text-amber-300',
+  rock:     'bg-stone-800 text-stone-300',
+  bug:      'bg-lime-950 text-lime-300',
+  ghost:    'bg-violet-950 text-violet-300',
+  steel:    'bg-slate-800 text-slate-300',
+  normal:   'bg-zinc-800 text-zinc-400',
+  flying:   'bg-sky-950 text-sky-300',
+}[type] ?? 'bg-slate-700 text-slate-300')
 </script>
 
 <style scoped>
-.team-manager {
-  min-height: 100vh;
-  background: #0f172a;
-  padding: 1rem;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  color: #e2e8f0;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.back-btn {
-  background: #1e293b;
-  border: 1px solid #334155;
-  color: #94a3b8;
-  padding: 0.4rem 0.8rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-}
-.back-btn:hover { background: #334155; color: #e2e8f0; }
-
-.title {
-  flex: 1;
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin: 0;
-  color: #f1f5f9;
-}
-
-.floor-badge {
-  background: #1e3a5f;
-  border: 1px solid #3b82f6;
-  color: #93c5fd;
-  padding: 0.3rem 0.7rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.team-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.pokemon-card {
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 16px;
-  overflow: hidden;
-  transition: border-color 0.2s;
-  cursor: pointer;
-}
-.pokemon-card:hover { border-color: #475569; }
-.pokemon-card.is-active { border-color: #3b82f6; box-shadow: 0 0 0 1px #3b82f620; }
-.pokemon-card.is-fainted { opacity: 0.6; }
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem 1rem;
-  background: #0f172a;
-  border-bottom: 1px solid #1e293b;
-}
-.card-header-left { display: flex; align-items: center; gap: 0.5rem; }
-
-.pokemon-index { font-size: 0.75rem; color: #64748b; font-weight: 600; }
-
-.active-badge {
-  background: #1d4ed8;
-  color: #bfdbfe;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.1rem 0.5rem;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.fainted-badge {
-  background: #7f1d1d;
-  color: #fca5a5;
-  font-size: 0.65rem;
-  font-weight: 700;
-  padding: 0.1rem 0.5rem;
-  border-radius: 20px;
-  text-transform: uppercase;
-}
-
-.type-badges { display: flex; gap: 0.3rem; }
-.type-badge {
-  font-size: 0.65rem;
-  font-weight: 600;
-  padding: 0.15rem 0.5rem;
-  border-radius: 20px;
-  text-transform: capitalize;
-  background: #334155;
-  color: #cbd5e1;
-}
-/* Colores por tipo */
-.type-fire { background: #7c2d12; color: #fdba74; }
-.type-water { background: #1e3a5f; color: #93c5fd; }
-.type-grass { background: #14532d; color: #86efac; }
-.type-electric { background: #713f12; color: #fde047; }
-.type-psychic { background: #831843; color: #f9a8d4; }
-.type-ice { background: #164e63; color: #a5f3fc; }
-.type-dragon { background: #1e1b4b; color: #a5b4fc; }
-.type-dark { background: #1c1917; color: #a8a29e; }
-.type-fairy { background: #4a044e; color: #f0abfc; }
-.type-fighting { background: #431407; color: #fb923c; }
-.type-poison { background: #3b0764; color: #d8b4fe; }
-.type-ground { background: #431a03; color: #fcd34d; }
-.type-rock { background: #292524; color: #d6d3d1; }
-.type-bug { background: #1a2e05; color: #a3e635; }
-.type-ghost { background: #2e1065; color: #c4b5fd; }
-.type-steel { background: #1e293b; color: #94a3b8; }
-.type-normal { background: #27272a; color: #a1a1aa; }
-.type-flying { background: #1e3a5f; color: #bae6fd; }
-
-.card-body {
-  display: flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  gap: 1rem;
-}
-
-.sprite-wrap {
-  width: 72px;
-  height: 72px;
-  flex-shrink: 0;
-  background: #0f172a;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.sprite { width: 100%; height: 100%; object-fit: contain; }
-.sprite.grayscale { filter: grayscale(1); }
-.sprite-placeholder { font-size: 2rem; color: #475569; }
-
-.pokemon-info { flex: 1; }
-.pokemon-name {
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-transform: capitalize;
-  margin: 0 0 0.1rem;
-  color: #f1f5f9;
-}
-.pokemon-level { font-size: 0.8rem; color: #64748b; margin: 0 0 0.5rem; }
-
-.hp-section { }
-.hp-label {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  color: #94a3b8;
-  margin-bottom: 0.25rem;
-}
-.hp-numbers { font-weight: 600; color: #cbd5e1; }
-.hp-bar-bg {
-  height: 6px;
-  background: #0f172a;
-  border-radius: 999px;
-  overflow: hidden;
-}
-.hp-bar-fill {
-  height: 100%;
-  border-radius: 999px;
-  transition: width 0.4s ease;
-}
-.hp-green { background: #22c55e; }
-.hp-yellow { background: #eab308; }
-.hp-red { background: #ef4444; }
-
-.card-details {
-  border-top: 1px solid #1e293b;
-  padding: 1rem;
-}
-
-.stats-grid { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
-.stat-row { display: flex; align-items: center; gap: 0.5rem; }
-.stat-name { width: 60px; font-size: 0.72rem; color: #64748b; text-align: right; flex-shrink: 0; }
-.stat-bar-bg {
-  flex: 1;
-  height: 5px;
-  background: #0f172a;
-  border-radius: 999px;
-  overflow: hidden;
-}
-.stat-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-  border-radius: 999px;
-  transition: width 0.5s ease;
-}
-.stat-value { width: 30px; font-size: 0.75rem; font-weight: 600; color: #cbd5e1; text-align: right; }
-
-.section-title { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.5rem; }
-
-.attacks-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
-.attack-chip {
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 8px;
-  padding: 0.4rem 0.6rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-.attack-name { font-size: 0.78rem; font-weight: 600; text-transform: capitalize; color: #e2e8f0; }
-.attack-meta { display: flex; gap: 0.5rem; font-size: 0.68rem; color: #64748b; }
-.attack-class { text-transform: capitalize; }
-
-.expand-hint {
-  text-align: center;
-  font-size: 0.7rem;
-  color: #334155;
-  padding: 0.4rem;
-  border-top: 1px solid #1e293b;
-  user-select: none;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 4rem 1rem;
-  color: #475569;
-}
-
-/* Transición expandir */
 .expand-enter-active, .expand-leave-active {
   transition: all 0.25s ease;
   overflow: hidden;
 }
-.expand-enter-from, .expand-leave-to {
-  opacity: 0;
-  max-height: 0;
-}
-.expand-enter-to, .expand-leave-from {
-  opacity: 1;
-  max-height: 600px;
-}
+.expand-enter-from, .expand-leave-to { opacity: 0; max-height: 0; }
+.expand-enter-to, .expand-leave-from { opacity: 1; max-height: 600px; }
 </style>
