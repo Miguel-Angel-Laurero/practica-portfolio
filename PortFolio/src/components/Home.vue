@@ -21,12 +21,12 @@
     >
       Entrar en la torre →
     </button>
-    <button
+    <!-- <button
       class="mt-4 px-8 py-3 bg-white text-blue-950 rounded-xl font-bold text-lg hover:bg-yellow-300 transition-colors"
       @click="towerManager.nextFloor()"
     >
       Subir al siguiente piso →
-    </button>
+    </button> -->
   </div>
 </template>
 

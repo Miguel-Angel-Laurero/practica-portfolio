@@ -107,16 +107,16 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useCombatStore } from '@/stores/useCombatStore'
+import { useTowerManagerStore } from '@/stores/useTowerManagerStore'
 import randomSelection from '@/composables/randomSelection'
 import ProgressSpinner from 'primevue/progressspinner'
 
 const creatures = ref([])
 const team = ref([])
 const loading = ref(true)
-const router = useRouter()
 const combatStore = useCombatStore()
+const towerManager = useTowerManagerStore()
 
 async function loadCreatures() {
   loading.value = true
@@ -144,13 +144,9 @@ function removeFromTeam(index) {
 async function goToCombat() {
   if (team.value.length !== 3) return
 
-  const selectedNames = team.value.map((c) => c.name)
-  const enemyTeam = await randomSelection(3, selectedNames)
-
   combatStore.setPlayerTeamFromObjects(team.value)
-  combatStore.setEnemyTeamFromObjects(enemyTeam)
-  combatStore.resetBattle()
-  router.push({ name: 'combat' })
+  towerManager.resetTower()
+  towerManager.nextFloor()
 }
 
 onMounted(loadCreatures)

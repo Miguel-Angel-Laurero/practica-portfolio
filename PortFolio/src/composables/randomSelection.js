@@ -12,7 +12,15 @@ function calcStat(base, iv, level, isHp = false) {
   return Math.floor(((2 * base + iv) * level) / 100) + 5
 }
 
-export default async function randomSelection(count = 6, excludeNames = []) {
+function baseStatsLimit(stats) {
+  let totalBase = 0;
+  stats.forEach(stat => {
+    totalBase += stat.base_stat
+  });
+  return totalBase
+}
+
+export default async function randomSelection(count = 6, excludeNames = [], maxBaseStats = 320) {
   const { data, error, fetchApi } = useApi('/pokemon?limit=100000')
 
   await fetchApi()
@@ -44,47 +52,52 @@ export default async function randomSelection(count = 6, excludeNames = []) {
       const detailsResponse = await fetch(creatureSummary.url)
       if (!detailsResponse.ok) throw new Error('Error fetching creature details')
       const details = await detailsResponse.json()
-
-      const scaledStats = (details.stats || []).map((s) => {
-        const iv = randomIV()
-        const isHp = s.stat.name === 'hp'
-        return {
-          ...s,
-          base_stat: calcStat(s.base_stat, iv, LEVEL, isHp),
-          base_stat_base: s.base_stat, // 👈 base original de la API
-          iv,                          // 👈 IV fijo para recalcular en levelup
+      
+      //comprobamos el limite de stats base para saber si el pokemon es valido
+      if (maxBaseStats >= baseStatsLimit(details.stats)) {
+        
+        const scaledStats = (details.stats || []).map((s) => {
+          const iv = randomIV()
+          const isHp = s.stat.name === 'hp'
+          return {
+            ...s,
+            base_stat: calcStat(s.base_stat, iv, LEVEL, isHp),
+            base_stat_base: s.base_stat, // 👈 base original de la API
+            iv,                          // 👈 IV fijo para recalcular en levelup
+          }
+        })
+  
+        const hpStat = scaledStats.find((s) => s.stat.name === 'hp')?.base_stat ?? 10
+        const sprite = details.sprites?.other?.['official-artwork']?.front_default || details.sprites?.front_default
+  
+        const EXCLUDED_SUFFIXES = ['-mega', '-gmax', '-mega-z', '-mega-x']
+        const baseName = EXCLUDED_SUFFIXES.reduce(
+          (name, suffix) => (name.endsWith(suffix) ? name.slice(0, -suffix.length) : name),
+          details.name,
+        )
+  
+        let attackDetails = details
+        if (baseName !== details.name) {
+          const baseResponse = await fetch(`https://pokeapi.co/api/v2/pokemon/${baseName}`)
+          if (baseResponse.ok) attackDetails = await baseResponse.json()
         }
-      })
-
-      const hpStat = scaledStats.find((s) => s.stat.name === 'hp')?.base_stat ?? 10
-      const sprite = details.sprites?.other?.['official-artwork']?.front_default || details.sprites?.front_default
-
-      const EXCLUDED_SUFFIXES = ['-mega', '-gmax', '-mega-z', '-mega-x']
-      const baseName = EXCLUDED_SUFFIXES.reduce(
-        (name, suffix) => (name.endsWith(suffix) ? name.slice(0, -suffix.length) : name),
-        details.name,
-      )
-
-      let attackDetails = details
-      if (baseName !== details.name) {
-        const baseResponse = await fetch(`https://pokeapi.co/api/v2/pokemon/${baseName}`)
-        if (baseResponse.ok) attackDetails = await baseResponse.json()
+  
+        const attacks = await startingAttacks(attackDetails)
+  
+        optionList.push({
+          id: details.id?.toString() || creatureSummary.name,
+          name: details.name,
+          level: LEVEL,
+          stats: scaledStats,
+          hp: hpStat,
+          maxHp: hpStat,
+          sprite: sprite,
+          types: details.types || [],
+          attacks: attacks,
+          learnableMoves: details.moves?.map((m) => ({ name: m.move.name, url: m.move.url })) ?? [],
+        })
       }
 
-      const attacks = await startingAttacks(attackDetails)
-
-      optionList.push({
-        id: details.id?.toString() || creatureSummary.name,
-        name: details.name,
-        level: LEVEL,
-        stats: scaledStats,
-        hp: hpStat,
-        maxHp: hpStat,
-        sprite: sprite,
-        types: details.types || [],
-        attacks: attacks,
-        learnableMoves: details.moves?.map((m) => ({ name: m.move.name, url: m.move.url })) ?? [],
-      })
     } catch (err) {
       console.warn('randomSelection: failed to load details for', creatureSummary.name, err)
     }

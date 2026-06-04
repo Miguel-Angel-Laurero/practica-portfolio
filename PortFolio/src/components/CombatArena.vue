@@ -79,16 +79,19 @@
     >
       <div class="bg-white rounded-xl p-8 max-w-md w-full text-center">
         <h2 class="text-3xl font-bold mb-4">{{ battleResult }}</h2>
-        <p class="text-sm text-slate-600 mb-6">El combate ha terminado. Pulsa el botón para volver al inicio.</p>
+        <p v-if="combatStore.aliveEnemies.length === 0" class="text-sm text-slate-600 mb-6">¡Victoria! Avanza al siguiente piso.</p>
+        <p v-else class="text-sm text-slate-600 mb-6">Tu equipo ha caído. Vuelve al inicio.</p>
         <button
+          v-if="combatStore.aliveEnemies.length === 0"
           class="bg-indigo-950 text-white rounded-lg px-6 py-3 font-semibold hover:bg-indigo-800"
-          @click="towerManager.nextFloor()"
+          @click="towerManager.finishBattle('victory')"
         >
           Siguiente Piso
         </button>
         <button
-          class="bg-indigo-950 text-white rounded-lg px-6 py-3 font-semibold hover:bg-indigo-800"
-          @click="towerManager.finishBattle()"
+          v-else
+          class="bg-red-700 text-white rounded-lg px-6 py-3 font-semibold hover:bg-red-600"
+          @click="towerManager.finishBattle('defeat')"
         >
           Volver al inicio
         </button>

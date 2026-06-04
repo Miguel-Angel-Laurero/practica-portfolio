@@ -24,14 +24,14 @@ export const useTowerManagerStore = defineStore('towerManager', {
   actions: {
     nextFloor() {
       this.currentFloor++
-      if (this.currentFloor > this.maxFloorReached) {
+      if (this.currentFloor >= this.maxFloorReached) {
         this.maxFloorReached = this.currentFloor
       }
       this.checkEvents()  
     },
 
     resetTower() {
-      this.currentFloor = 1
+      this.currentFloor = 0
       this.floorsSurvivals = []
     },
 
@@ -55,7 +55,7 @@ export const useTowerManagerStore = defineStore('towerManager', {
     async checkEvents() {
       if (this.currentFloor % 10 === 0) {
         //piso de combate con boss
-        setTimeout(await router.push({ name: 'combat' }),1200)
+        await router.push({ name: 'combat' })
         return
       } else if (this.currentFloor % 5 === 0) {
         //piso de evento
@@ -65,7 +65,8 @@ export const useTowerManagerStore = defineStore('towerManager', {
         //piso de combate normal
         const combatStore = useCombatStore()
         const { enemyCount } = this.getCurrentFloorEnemyDifficulty()
-        const newEnemyTeam = await randomSelection(enemyCount)
+        const statLimit = 320 + Math.floor(this.currentFloor / 10) * 40
+        const newEnemyTeam = await randomSelection(enemyCount, [], statLimit)
         combatStore.setEnemyTeamFromObjects(newEnemyTeam)
         combatStore.resetBattle()
 
@@ -82,8 +83,14 @@ export const useTowerManagerStore = defineStore('towerManager', {
         enemyCount: this.currentFloor <= 5 ? 3 : Math.min(5, 3 + Math.floor((this.currentFloor - 5) / 5)),
       }
     },
-    finishBattle() {
-      router.push('/')
+    finishBattle(result = 'victory') {
+      if (result === 'victory') {
+        this.nextFloor()
+      } else {
+        // Derrota: volver al inicio
+        this.currentFloor = 0
+        router.push('/')
+      }
     },
   },
 })
