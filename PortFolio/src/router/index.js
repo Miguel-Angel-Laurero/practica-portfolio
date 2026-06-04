@@ -5,6 +5,7 @@ import TeamSelectionView from '@/views/TeamSelectionView.vue'
 import EventView from '@/views/EventView.vue'
 import ChoosePokemonView from '@/views/ChoosePokemonView.vue'
 import TrainView from '@/views/TrainView.vue'
+import TeamManagerView from '@/views/TeamManagerView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -39,6 +40,11 @@ const router = createRouter({
       name: 'train',
       component: TrainView
     },
+    {
+      path: '/teamView',
+      name: 'teamView',
+      component: TeamManagerView
+    }
   ],
 })
 

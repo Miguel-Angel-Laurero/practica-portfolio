@@ -55,6 +55,7 @@ export const useCombatStore = defineStore('combat', {
     },
 
     switchActivePokemon(newIndex) {
+      if (this.currentTurn !== 'player') return
       if (
         newIndex < 0 ||
         newIndex >= this.playerTeam.length ||
@@ -65,6 +66,13 @@ export const useCombatStore = defineStore('combat', {
       const previous = this.activePlayer?.name
       this.activePlayerIndex = newIndex
       this.addLog(`${previous} vuelve. ¡Adelante, ${this.activePlayer.name}!`)
+
+      // El cambio manual consume el turno: el enemigo contraataca
+      this.currentTurn = 'resolving'
+      setTimeout(() => {
+        this.enemyAttack()
+        this.checkBattleStatus()
+      }, 1200)
     },
 
     autoSwitchActivePlayer() {
