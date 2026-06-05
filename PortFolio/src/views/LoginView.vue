@@ -16,12 +16,12 @@
         <!-- Tabs login / registro -->
         <div class="flex bg-slate-900 rounded-xl p-1 gap-1">
           <button
-            class="flex-1 py-1.5 text-sm font-semibold rounded-lg transition-colors"
+            class="flex-1 py-1.5 text-sm font-semibold rounded-lg cursor-pointer transition-colors"
             :class="mode === 'login' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'"
             @click="mode = 'login'; error = ''"
           >Entrar</button>
           <button
-            class="flex-1 py-1.5 text-sm font-semibold rounded-lg transition-colors"
+            class="flex-1 py-1.5 text-sm font-semibold rounded-lg cursor-pointer transition-colors"
             :class="mode === 'register' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'"
             @click="mode = 'register'; error = ''"
           >Registrarse</button>
@@ -70,7 +70,7 @@
 
         <!-- Botón principal -->
         <button
-          class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
+          class="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer text-white font-semibold py-2.5 rounded-xl text-sm transition-colors"
           :disabled="loading"
           @click="submit"
         >
@@ -87,7 +87,7 @@
 
         <!-- Google -->
         <button
-          class="flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
+          class="flex items-center justify-center cursor-pointer gap-2 bg-slate-900 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold py-2.5 rounded-xl text-sm transition-colors disabled:opacity-50"
           :disabled="loading"
           @click="loginWithGoogle"
         >

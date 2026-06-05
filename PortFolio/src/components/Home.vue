@@ -8,6 +8,12 @@
       backgroundRepeat: 'no-repeat'
     }"
   >
+  <button
+  class="px-4 py-2 bg-red-600 text-white rounded-xl font-semibold cursor-pointer hover:bg-red-500 transition-colors"
+  @click="logout"
+>
+  Cerrar sesión
+</button>
     <div class="bg-slate-800 p-4 rounded-2xl">
       <h1 class="flex text-4xl font-bold justify-center">Torre de Batalla</h1>
       <p class="text-gray-400 text-center max-w-sm">
@@ -45,7 +51,13 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useTowerManagerStore } from '@/stores/useTowerManagerStore'
+import { supabase } from '@/lib/supabase'
 
 const router = useRouter()
 const towerManager = useTowerManagerStore()
+
+async function logout() {
+  await supabase.auth.signOut()
+  router.push({ name: 'login' })
+}
 </script>
