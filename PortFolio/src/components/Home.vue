@@ -14,6 +14,7 @@
 >
   Cerrar sesión
 </button>
+<div> bienvenido @user</div>
     <div class="bg-slate-800 p-4 rounded-2xl">
       <h1 class="flex text-4xl font-bold justify-center">Torre de Batalla</h1>
       <p class="text-gray-400 text-center max-w-sm">
