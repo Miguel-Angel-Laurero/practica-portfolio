@@ -19,3 +19,7 @@ app.use(router)
 app.use(PrimeVue)
 
 app.mount('#app')
+
+// VITE_API_BASE_URL = https://pokeapi.co/api/v2
+// VITE_SUPABASE_URL = https://xncspsvecvtrayfwhfcu.supabase.co
+// VITE_SUPABASE_ANON_KEY = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhuY3Nwc3ZlY3Z0cmF5ZndoZmN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1NzM3MzAsImV4cCI6MjA5NjE0OTczMH0.cukh-Mdz6dj-JPLGiVC22RthjJcc8ObAw-N2iMSgQhs
