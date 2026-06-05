@@ -7,6 +7,9 @@ import EventView from '@/views/EventView.vue'
 import ChoosePokemonView from '@/views/ChoosePokemonView.vue'
 import TrainView from '@/views/TrainView.vue'
 import TeamManagerView from '@/views/TeamManagerView.vue'
+import { supabase } from '@/lib/supabase'
+
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -52,6 +55,16 @@ const router = createRouter({
       component: TeamManagerView
     }
   ],
+})
+router.beforeEach(async (to) => {
+  const { data: { session } } = await supabase.auth.getSession()
+  
+  if (!session && to.name !== 'login') {
+    return { name: 'login' }
+  }
+  if (session && to.name === 'login') {
+    return { name: 'home' }
+  }
 })
 
 export default router

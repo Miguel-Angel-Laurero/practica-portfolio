@@ -28,6 +28,7 @@ export async function startingAttacks(pokemon) {
           type: attackDetails.type?.name ?? 'normal', // 👈
           effects: attackDetails.effect_entries || [],
           damageClass: attackDetails.damage_class?.name,
+
         }
       } catch (error) {
         console.warn('startingAttacks: failed to load attack details for', move.name, error)
@@ -35,7 +36,6 @@ export async function startingAttacks(pokemon) {
           name: move.name,
           power: 0,
           effects: [],
-
           damageClass: null,
         }
       }
