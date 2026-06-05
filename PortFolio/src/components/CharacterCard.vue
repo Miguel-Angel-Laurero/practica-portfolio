@@ -1,18 +1,18 @@
 <template>
-    <div class="grid grid-cols-2 p-4 text-white">
-        <img v-if="sprite" :src="sprite" :alt="name" class="w-48 h-48 object-contain mx-auto">
+    <div class="grid grid-cols-1 p-4 text-white">
         <div>
             <h2 class="text-xl font-bold">{{ name }} Lvl:{{ level }}</h2>
             <div class="w-full h-4 bg-white/40 rounded-full overflow-hidden">
-            <div
+                <div
                 class="h-full rounded-full transition-all"
                 :class="hpBarColor"
                 :style="{ width: hpPercent + '%' }"
-            />
+                />
             </div>
             <h3 class="text-lg font-semibold text-indigo">HP: {{ hp }}/{{ maxHp }}</h3>
             
         </div>
+        <img v-if="sprite" :src="sprite" :alt="name" class="w-48 h-48 object-contain mx-auto">
     </div>
 </template>
 <script setup>

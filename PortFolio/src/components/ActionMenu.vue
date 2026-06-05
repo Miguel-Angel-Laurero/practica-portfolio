@@ -1,10 +1,10 @@
 <template>
-  <div class="grid grid-cols-2 gap-2 p-2 bg-gray-100 rounded-lg overflow-y-auto">
+  <div class="grid grid-cols-2 gap-2 p-2 bg-gray-200 rounded-lg overflow-y-auto">
     <template v-if="actionMenuStore.currentMenu === 'main'">
-      <button class="action-btn hover:bg-blue-50" @click="actionMenuStore.openMenu('attack')">Atacar</button>
-      <button class="action-btn hover:bg-blue-50" @click="goToTeam()">Equipo</button>
-      <button class="action-btn hover:bg-blue-50" @click="actionMenuStore.openMenu('items')">Items</button>
-      <button class="action-btn hover:bg-blue-50" @click="executeAction('flee')">Huir</button>
+      <button class="action-btn bg-gray-100 hover:bg-blue-50" @click="actionMenuStore.openMenu('attack')">Atacar</button>
+      <button class="action-btn bg-gray-100 hover:bg-blue-50" @click="goToTeam()">Equipo</button>
+      <button class="action-btn bg-gray-100 hover:bg-blue-50" @click="actionMenuStore.openMenu('items')">Items</button>
+      <button class="action-btn bg-gray-100 hover:bg-blue-50" @click="executeAction('flee')">Huir</button>
     </template>
 
     <template v-else-if="actionMenuStore.currentMenu === 'attack'">

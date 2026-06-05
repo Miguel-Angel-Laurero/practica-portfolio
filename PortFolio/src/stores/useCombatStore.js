@@ -18,6 +18,7 @@ export const useCombatStore = defineStore('combat', {
     currentTurn: 'player',
     logs: [],
     battleResult: '',
+    revealedEnemyIndices: [],
   }),
 
   getters: {
@@ -25,6 +26,7 @@ export const useCombatStore = defineStore('combat', {
     aliveEnemies: (state) => state.enemyTeam.filter((character) => character.hp > 0),
     activePlayer: (state) => state.playerTeam[state.activePlayerIndex] ?? null,
     activeEnemy: (state) => state.enemyTeam[state.activeEnemyIndex] ?? null,
+    isEnemyRevealed: (state) => (index) => (state.revealedEnemyIndices ?? []).includes(index),
   },
 
   actions: {
@@ -36,6 +38,7 @@ export const useCombatStore = defineStore('combat', {
     setEnemyTeamFromObjects(creatures) {
       this.enemyTeam = creatures.map(cloneCreature)
       this.activeEnemyIndex = 0
+      this.revealedEnemyIndices = [0]
     },
 
     resetBattle() {
@@ -44,6 +47,7 @@ export const useCombatStore = defineStore('combat', {
       this.logs = []
       this.activePlayerIndex = 0
       this.activeEnemyIndex = 0
+      this.revealedEnemyIndices = [0]
       this.playerTeam = this.playerTeam.map((character) => ({
         ...character,
         hp: character.maxHp,
@@ -91,6 +95,10 @@ export const useCombatStore = defineStore('combat', {
       )
       if (nextIndex !== -1) {
         this.activeEnemyIndex = nextIndex
+        // Revelar el nuevo enemigo
+        if (!this.revealedEnemyIndices.includes(nextIndex)) {
+          this.revealedEnemyIndices.push(nextIndex)
+        }
         this.addLog(`¡El enemigo saca a ${this.activeEnemy.name}!`)
       }
     },
@@ -188,25 +196,27 @@ resolveRound(attack) {
     },
 
     // Devuelve true si la batalla terminó
-    checkBattleStatus() {
-      if (this.aliveEnemies.length === 0) {
-        this.addLog('Victoria. Has derrotado al equipo enemigo.')
-        this.playerTeam.forEach((pokemon) => {
-          this.levelUp(pokemon)
-        })
-        this.currentTurn = 'game_over'
-        this.battleResult = '¡Victoria! Has derrotado al equipo enemigo y tu equipo se ha hecho mas fuerte'
-        return true
-      }
-      if (this.alivePlayers.length === 0) {
-        this.addLog('Derrota. Tu equipo ha caido.')
-        this.currentTurn = 'game_over'
-        this.battleResult = 'Derrota. Tu equipo ha caido.'
-        return true
-      }
-      this.currentTurn = 'player'
-      return false
-    },
+  checkBattleStatus() {
+    if (this.currentTurn === 'game_over') return true // 👈 ya terminó, no procesar de nuevo
+
+    if (this.aliveEnemies.length === 0) {
+      this.addLog('Victoria. Has derrotado al equipo enemigo.')
+      this.currentTurn = 'game_over' // 👈 marcar ANTES de levelUp para evitar doble ejecución
+      this.battleResult = '¡Victoria! Has derrotado al equipo enemigo y tu equipo se ha hecho mas fuerte'
+      this.playerTeam.forEach((pokemon) => {
+        this.levelUp(pokemon)
+      })
+      return true
+    }
+    if (this.alivePlayers.length === 0) {
+      this.addLog('Derrota. Tu equipo ha caido.')
+      this.currentTurn = 'game_over'
+      this.battleResult = 'Derrota. Tu equipo ha caido.'
+      return true
+    }
+    this.currentTurn = 'player'
+    return false
+  },
     async levelUp(pokemon) {
       const index = this.playerTeam.findIndex((p) => p.id === pokemon.id)
       if (index === -1) return

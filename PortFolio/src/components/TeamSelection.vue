@@ -4,9 +4,9 @@
     <p class="mt-4 text-lg font-semibold text-slate-700">Cargando opciones...</p>
   </div>
 
-  <div v-else class="flex flex-col items-center p-4 gap-6">
-    <RouterLink class="bg-blue-100 hover:bg-blue-200 p-2 rounded-xl" to="/home">Salir de la torre</RouterLink>
-    <span class="text-2xl font-bold">Elige tu equipo</span>
+  <div v-else class="flex flex-col p-4 gap-6">
+    <RouterLink class="bg-blue-100 hover:bg-blue-200 p-2 rounded-xl flex justify-start absolute" to="/home">Salir de la torre</RouterLink>
+    <span class="text-2xl text-slate-100 font-bold flex flex-wrap justify-center">Elige tu equipo</span>
 
     <!-- Grid de criaturas disponibles -->
     <div class="flex flex-wrap justify-center gap-4">
@@ -29,7 +29,7 @@
         />
         <div class="font-semibold capitalize mt-1 mb-2">{{ creature.name }} Lvl: {{ creature.level }}</div>
 
-        <div class="grid grid-cols-2 gap-x-2 text-xs text-left text-gray-600 mb-2">
+        <div class="grid grid-cols-2 gap-x-2 text-xs text-left text-gray-600 mb-2 ">
           <span>HP</span>      <span class="font-medium text-gray-800">{{ getStat(creature, 'hp') }}</span>
           <span>Ataque</span>  <span class="font-medium text-gray-800">{{ getStat(creature, 'attack') }}</span>
           <span>Defensa</span> <span class="font-medium text-gray-800">{{ getStat(creature, 'defense') }}</span>
@@ -53,54 +53,53 @@
     </div>
 
     <!-- Panel de equipo seleccionado -->
-    <div class="w-full max-w-2xl bg-slate-100 rounded-xl p-4">
-      <h2 class="text-lg font-semibold mb-3">
-        Tu Equipo
-        <span class="text-sm font-normal text-gray-500">({{ team.length }}/3)</span>
-      </h2>
-
-      <p v-if="team.length === 0" class="text-center text-gray-400 py-4">
-        Ningún Pokémon seleccionado aún.
-      </p>
-
-      <div v-else class="grid grid-cols-3 gap-4 mb-4">
-        <div
-          v-for="(pokemon, index) in team"
-          :key="pokemon.id"
-          class="bg-white p-3 rounded-lg border border-gray-200 text-center relative"
-        >
-          <button
-            @click="removeFromTeam(index)"
-            class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-700 text-xs font-bold"
-            title="Quitar del equipo"
+    <div class="flex justify-center w-full">
+      <div class="w-full max-w-2xl bg-slate-100 rounded-xl p-4 justify-center flex flex-col items-center">
+        <h2 class="text-lg font-semibold mb-3">
+          Tu Equipo
+          <span class="text-sm font-normal text-gray-500">({{ team.length }}/3)</span>
+        </h2>
+        <p v-if="team.length === 0" class="text-center text-gray-400 py-4">
+          Ningún Pokémon seleccionado aún.
+        </p>
+        <div v-else class="grid grid-cols-3 gap-4 mb-4">
+          <div
+            v-for="(pokemon, index) in team"
+            :key="pokemon.id"
+            class="bg-white p-3 rounded-lg border border-gray-200 text-center relative"
           >
-            ×
-          </button>
-          <img
-            v-if="pokemon.sprite"
-            :src="pokemon.sprite"
-            :alt="pokemon.name"
-            class="w-16 h-16 object-contain mx-auto"
-          />
-          <div class="font-semibold capitalize text-sm mt-1">{{ pokemon.name }}</div>
-          <div class="text-xs text-gray-500 mt-1">HP: {{ pokemon.maxHp }}</div>
-          <ul class="mt-2 text-xs text-left text-gray-500 space-y-0.5">
-            <li v-for="attack in pokemon.attacks" :key="attack.name" class="capitalize">
-              {{ attack.name }}
-              <span v-if="attack.power" class="text-gray-400">· {{ attack.power }}</span>
-            </li>
-          </ul>
+            <button
+              @click="removeFromTeam(index)"
+              class="absolute top-2 right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-700 text-xs font-bold"
+              title="Quitar del equipo"
+            >
+              ×
+            </button>
+            <img
+              v-if="pokemon.sprite"
+              :src="pokemon.sprite"
+              :alt="pokemon.name"
+              class="w-16 h-16 object-contain mx-auto"
+            />
+            <div class="font-semibold capitalize text-sm mt-1">{{ pokemon.name }}</div>
+            <div class="text-xs text-gray-500 mt-1">HP: {{ pokemon.maxHp }}</div>
+            <ul class="mt-2 text-xs text-left text-gray-500 space-y-0.5">
+              <li v-for="attack in pokemon.attacks" :key="attack.name" class="capitalize">
+                {{ attack.name }}
+                <span v-if="attack.power" class="text-gray-400">· {{ attack.power }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
-
-      <div v-if="team.length === 3" class="text-center">
-        <p class="text-green-600 font-medium mb-3">¡Equipo completo!</p>
-        <button
-          class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold transition-colors"
-          @click="goToCombat"
-        >
-          Adentrarse en la torre →
-        </button>
+        <div v-if="team.length === 3" class="text-center">
+          <p class="text-green-600 font-medium mb-3">¡Equipo completo!</p>
+          <button
+            class="px-6 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 font-semibold transition-colors"
+            @click="goToCombat"
+          >
+            Adentrarse en la torre →
+          </button>
+        </div>
       </div>
     </div>
   </div>

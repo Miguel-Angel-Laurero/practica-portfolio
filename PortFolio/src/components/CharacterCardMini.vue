@@ -8,14 +8,23 @@
     }"
     @click="$emit('click')"
   >
+    <!-- No revelado -->
+    <div
+      v-if="!isRevealed"
+      class="w-10 h-10 flex items-center justify-center bg-slate-700 rounded-full text-xl font-bold text-white"
+    >
+      ?
+    </div>
+    <!-- Revelado -->
     <img
+      v-else
       :src="sprite"
       :alt="name"
       class="w-10 h-10 object-contain"
       :class="{ 'opacity-50': isDead }"
     />
+
     <span class="text-white text-xs font-semibold truncate max-w-12">{{ name }}</span>
-    <!-- Barra de hp mini -->
     <div class="w-10 h-1 bg-white/40 rounded-full overflow-hidden">
       <div
         class="h-full rounded-full transition-all"
@@ -36,6 +45,7 @@ const props = defineProps({
   sprite: String,
   isActive: Boolean,
   isDead: Boolean,
+  isRevealed: { type: Boolean, default: true },
 })
 
 defineEmits(['click'])

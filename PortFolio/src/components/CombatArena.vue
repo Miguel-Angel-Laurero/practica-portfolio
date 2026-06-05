@@ -1,5 +1,11 @@
 <template>
-  <div class="bg-blue-950 h-full p-8 relative flex flex-col">
+  <div class="bg-blue-950 h-full p-8 relative flex flex-col"
+  :style="{ 
+      backgroundImage: `url('img/Battle_arena.png')`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat'
+    }">
     <div class="flex justify-between items-center mb-6">
       <RouterLink class="bg-blue-100 hover:bg-blue-200 p-2 rounded-xl" to="/home">Salir de la torre</RouterLink>
       <h1 class="flex text-4xl font-bold text-white items-center">Piso {{ towerManager.getCurrentFloor || 1 }}</h1>
@@ -13,20 +19,24 @@
       <section class="flex flex-col gap-3 w-1/3">
         <h2 class="text-white font-bold text-xl mb-2">Tu Equipo</h2>
 
-        <!-- Activo grande -->
-        <CharacterCard
-          v-if="activePlayer"
-          :name="activePlayer.name"
-          :level="activePlayer.level"
-          :hp="activePlayer.hp"
-          :maxHp="activePlayer.maxHp"
-          :sprite="activePlayer.sprite"
-          :isPlayer="true"
-          :isActive="true"
-        />
+                  <!-- Equipo jugador - Activo grande -->
+          <div class="relative flex flex-col items-center p-4">
+            <CharacterCard
+              v-if="activePlayer"
+              :name="activePlayer.name"
+              :level="activePlayer.level"
+              :hp="activePlayer.hp"
+              :maxHp="activePlayer.maxHp"
+              :sprite="activePlayer.sprite"
+              :isPlayer="true"
+              :isActive="true"
+              class="z-10"
+            />
+            <img src="../../img/Battle_base.png" alt="base de combate" class="w-96 mt-32 absolute"/>
+          </div>
 
         <!-- Resto pequeños -->
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2 flex-wrap bg-slate-800 rounded-xl mx-auto p-8">
           <CharacterCardMini
             v-for="(player, index) in playerTeam"
             :key="player.id"
@@ -43,29 +53,35 @@
 
       <!-- Equipo enemigo -->
       <section class="flex flex-col gap-3 w-1/3">
-        <h2 class="text-white font-bold text-xl mb-2">Enemigos</h2>
+        <h2 class="text-white font-bold text-xl mb-2">Equipo Rival</h2>
 
         <!-- Activo grande -->
-        <CharacterCard
-          v-if="activeEnemy"
-          :name="activeEnemy.name"
-          :level="activeEnemy.level"
-          :hp="activeEnemy.hp"
-          :maxHp="activeEnemy.maxHp"
-          :sprite="activeEnemy.sprite"
-          :isPlayer="false"
-          :isActive="true"
-        />
-
+        <!-- Equipo enemigo - Activo grande -->
+        <div class="relative flex flex-col items-center p-4">
+          <CharacterCard
+            v-if="activeEnemy"
+            :name="activeEnemy.name"
+            :level="activeEnemy.level"
+            :hp="activeEnemy.hp"
+            :maxHp="activeEnemy.maxHp"
+            :sprite="activeEnemy.sprite"
+            :isPlayer="false"
+            :isActive="true"
+            class="z-10"
+          />
+          <img src="../../img/Battle_base.png" alt="base de combate" class="w-96 mt-32 absolute"/>
+        </div>
+        
         <!-- Resto pequeños -->
-        <div class="flex gap-2 flex-wrap">
+        <div class="flex gap-2 flex-wrap bg-slate-800 rounded-xl mx-auto p-8">
           <CharacterCardMini
             v-for="(enemy, index) in enemyTeam"
             :key="enemy.id"
-            :name="enemy.name"
+            :name="combatStore.isEnemyRevealed(index) ? enemy.name : '???'"
             :hp="enemy.hp"
             :maxHp="enemy.maxHp"
             :sprite="enemy.sprite"
+            :isRevealed="combatStore.isEnemyRevealed(index)"
             :isActive="index === activeEnemyIndex"
             :isDead="enemy.hp <= 0"
           />
@@ -106,9 +122,6 @@ import CharacterCardMini from './CharacterCardMini.vue'
 import { useCombatStore } from '@/stores/useCombatStore'
 import { useTowerManagerStore } from '@/stores/useTowerManagerStore'
 import { storeToRefs } from 'pinia'
-
-
-
 
 const combatStore = useCombatStore()
 const towerManager = useTowerManagerStore()

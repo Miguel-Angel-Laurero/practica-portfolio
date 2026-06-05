@@ -1,11 +1,13 @@
 <template>
-  <div class="min-h-screen bg-[url('/Tower.png')] flex items-center justify-center p-4">
+  <div 
+  class="min-h-screen flex items-center justify-center p-4 bg-cover bg-center" 
+  :style="{ backgroundImage: `url('img/Tower.png')` }"
+>
     <div class="w-full max-w-sm">
-
       <!-- Logo / título -->
       <div class="text-center mb-8">
-        <h1 class="text-3xl font-bold text-slate-100 mb-1">PokéTower</h1>
-        <p class="text-sm text-slate-500">Inicia sesión para continuar</p>
+        <h1 class="text-6xl font-bold text-slate-100 mb-1 drop-shadow-[0_0_3px_rgba(0,0,0,1)]"">PokeTower</h1>
+        <p class="text-md font-bold drop-shadow-[0_0_3px_rgba(0,0,0,1)] text-slate-100">Inicia sesión para continuar</p>
       </div>
 
       <!-- Card -->

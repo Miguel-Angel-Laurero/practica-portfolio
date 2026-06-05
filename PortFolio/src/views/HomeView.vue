@@ -1,5 +1,5 @@
 <template>
-  <main class="h-screen ">
+  <main class="h-screen w-screen" >
     <Home/>
   </main>
 </template>

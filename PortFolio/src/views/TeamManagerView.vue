@@ -19,7 +19,7 @@
     </div>
 
     <!-- Team list -->
-    <div v-else class="flex flex-col gap-4">
+    <div v-else class="flex flex-col gap-4 ">
       <div
         v-for="(pokemon, index) in playerTeam"
         :key="pokemon.id"
